@@ -63,6 +63,8 @@ public class MousePosition3D : MonoBehaviour
     }
 
     void Move() {
-        StartCoroutine(tileGrid.GetPath(occupiedCollider.myCell));
+        if (!tileGrid.currentlyRunning) {
+            StartCoroutine(tileGrid.GetPath(occupiedCollider.myCell));
+        }
     }
 }

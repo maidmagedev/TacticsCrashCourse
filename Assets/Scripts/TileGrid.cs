@@ -20,6 +20,7 @@ public class TileGrid : MonoBehaviour
     public GridCell[,] grid;
     public GameObject gridContainer; // empty game object that acts like a folder. This will contain all the individual cells.
     public int maxDistance;
+    public bool currentlyRunning;
 
     [Header("References")]
     public GameManager gameManager;
@@ -105,6 +106,8 @@ public class TileGrid : MonoBehaviour
     }
 
     public IEnumerator GetPath(GridCell end) {
+
+        currentlyRunning = true;
         (int, int) endCoordinates = end.coordinates;
 
         ResetText();
@@ -113,6 +116,9 @@ public class TileGrid : MonoBehaviour
 
         List<GridCell> pseudoQueue = new List<GridCell>();
         List<GridCell> visited = new List<GridCell>();
+        List<GridCell> path = new List<GridCell>();
+
+        bool lookingForPath = true;
 
         // Reset each grid cell's states to ensure the path is generated correctly.
         foreach (GridCell currCell in grid) {
@@ -121,44 +127,55 @@ public class TileGrid : MonoBehaviour
             currCell.hCost = 0;
             currCell.previous = null;
 
-            //pseudoQueue.Add(currCell);
+            //pseudoQueue.Add(currCell); // In standard dijsktra's, you might add all cells immediately.
         }
 
         // some versions of pathfinding algorithms store these instead in a map/dict in this script but personally I like this more... dont know why.
         start.finalCost = 0;
         pseudoQueue.Add(start);
         int i = 0;
-        while (pseudoQueue.Count > 0) {
+        while (pseudoQueue.Count > 0 && lookingForPath) {
             Debug.Log("loop: " + i);
             pseudoQueue.Sort((a, b) => a.finalCost.CompareTo(b.finalCost)); // Sort the queue.
+
             GridCell current = pseudoQueue[0];
             pseudoQueue.Remove(current);
             visited.Add(current);
 
             if (current.cellType == GridCell.Type.notTraversable) {
-                continue;
+                continue; // cell is not walkable, so ignore this cell.
             }
 
-            //current.textElem.text = i.ToString();
             current.textElem.text = current.finalCost.ToString();
             current.textElem.color = Color.cyan;
 
+            // Is this the destination cell?
             if (current.coordinates == endCoordinates) {
-                Debug.Log("End!");
+                lookingForPath = false;
+
+                Debug.Log("Path Found!");
+                // End cell is treated differently for color styling. 
                 current.textElem.text = "e";
                 current.textElem.color = Color.red;
+                path.Add(current);
+
                 current = current.previous;
+
                 // found the end!
                 while (current != null && current.previous != null || current == start) {
+                    path.Add(current);
                     current.textElem.text = ".";
                     current = current.previous;
                 }
                 start.textElem.text = "s";
                 start.textElem.color = Color.green;
+
+                StartCoroutine(PathLerp(path, gameManager.currentSelectedUnit));
                 
                 gameManager.currentSelectedUnit.coordinates = endCoordinates;
                 pseudoQueue.Clear();
-                continue;
+                continue; // would normally have a return here or something, but because this is a coroutine some weird stuff happens? 
+                // we just continue, the loop ends bc of the above condition and the function is over.
             }
 
             // update neighbor distances.
@@ -183,7 +200,7 @@ public class TileGrid : MonoBehaviour
                         pseudoQueue.Add(neighbor);
                         neighbor.finalCost = distFromCurr;
                         neighbor.previous = current;
-                        neighbor.textElem.color = Color.blue;
+                        neighbor.textElem.color = Color.yellow;
                         neighbor.textElem.text = neighbor.finalCost.ToString();
                     }
                 } else if (algorithm == Algorithm.A_Star) {
@@ -206,12 +223,13 @@ public class TileGrid : MonoBehaviour
                         neighbor.finalCost = neighbor.gCost + neighbor.hCost;    
                         neighbor.previous = current;
 
-                        neighbor.textElem.color = Color.blue;
+                        neighbor.textElem.color = Color.yellow;
                         neighbor.textElem.text = neighbor.finalCost.ToString();
                     }
                 }
             }
             i++;
+            // Manualstepping can be set in the inspector window in unity. This allows us to go through each cell one by one every time we press the key (default space bar)
             if (manualStepping) {
                 bool wait = true;
                 while (wait) {
@@ -224,11 +242,37 @@ public class TileGrid : MonoBehaviour
                 yield return new WaitForSeconds(autoStepTimer);
             }
         }
+        if (lookingForPath) {
+            Debug.Log("Destination was unreachable.");
+            currentlyRunning = false;
+        }
     }
 
     // hCost - hueristic - used by A* pathfinding.
+    // Heuristic cost is the predicted distance to the end.
     public int ManhattanDist(GridCell A, GridCell B) {
         return Mathf.Abs(A.coordinates.Item1 - B.coordinates.Item1) + Mathf.Abs(A.coordinates.Item2 - B.coordinates.Item2);
     }
 
+    public IEnumerator PathLerp(List<GridCell> path, Unit unit) {
+        int i = path.Count - 1;
+        foreach (GridCell current in path) {
+            if (i == 0) {
+                continue;
+            }
+            Vector3 startPosition = path[i].gameObject.transform.position;
+            i--;
+            Vector3 endPosition = path[i].gameObject.transform.position;
+            float duration = 0.2f;
+            float timeElapsed = 0.0f;
+            while (timeElapsed < duration) {
+                timeElapsed += Time.deltaTime;
+                unit.gameObject.transform.position = Vector3.Lerp(startPosition, endPosition, timeElapsed / duration);
+                yield return new WaitForEndOfFrame();
+            }
+
+        }
+        gameManager.ChangeUnit();
+        currentlyRunning = false;
+    }
 }
