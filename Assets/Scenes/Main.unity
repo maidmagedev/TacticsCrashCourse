@@ -602,6 +602,11 @@ MonoBehaviour:
   tilePrefab: {fileID: 2892044500977090049, guid: a8db4ea120cf85d40a6613e9ee2c7e3d, type: 3}
   rows: 10
   columns: 15
+  algorithm: 1
+  heuristicWeight: 11
+  autoStepTimer: 0.1
+  manualStepping: 0
+  manualStepKey: 32
   gridContainer: {fileID: 2006114320}
   maxDistance: 0
   gameManager: {fileID: 1098577508}
@@ -669,8 +674,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   occupiedCollider: {fileID: 0}
-  gridCellTypeModifierTool: 1
-  selectTileMode: 0
+  gridCellTypeModifierTool: 0
+  selectTileMode: 1
   tileGrid: {fileID: 1328098497}
 --- !u!54 &1521960898
 Rigidbody:
