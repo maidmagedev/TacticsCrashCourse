@@ -706,11 +706,11 @@ MonoBehaviour:
   columns: 15
   algorithm: 1
   heuristicWeight: 11
-  autoStepTimer: 0.1
+  autoStepTimer: 0.01
   manualStepping: 0
   manualStepKey: 32
+  travelTime: 0.25
   gridContainer: {fileID: 2006114320}
-  maxDistance: 0
   currentlyRunning: 0
   gameManager: {fileID: 1098577508}
 --- !u!1 &1521960894

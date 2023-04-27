@@ -15,11 +15,13 @@ public class TileGrid : MonoBehaviour
     public float autoStepTimer = 0.1f; // delay between each iteration of the pathfinding algorithm
     public bool manualStepping = false; // toggles manual gridcell by gridcell stepping during pathfinding.
     public KeyCode manualStepKey = KeyCode.Space;
+    public float travelTime = 0.1f; // time to move the Unit's model physically per tile.
 
     [Header("Operational Variables....")]
-    public GridCell[,] grid;
     public GameObject gridContainer; // empty game object that acts like a folder. This will contain all the individual cells.
-    public int maxDistance;
+
+    public GridCell[,] grid;
+    // public int maxDistance; // unused
     public bool currentlyRunning;
 
     [Header("References")]
@@ -263,7 +265,7 @@ public class TileGrid : MonoBehaviour
             Vector3 startPosition = path[i].gameObject.transform.position;
             i--;
             Vector3 endPosition = path[i].gameObject.transform.position;
-            float duration = 0.2f;
+            float duration = travelTime;
             float timeElapsed = 0.0f;
             while (timeElapsed < duration) {
                 timeElapsed += Time.deltaTime;
