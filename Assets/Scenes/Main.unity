@@ -470,11 +470,11 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
+  near clip plane: -1
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -498,7 +498,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 4.59, y: 23.25, z: 2.36}
+  m_LocalPosition: {x: 6.83, y: 23.25, z: 4.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -600,8 +600,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 2892044500977090049, guid: a8db4ea120cf85d40a6613e9ee2c7e3d, type: 3}
-  rows: 5
-  columns: 10
+  rows: 10
+  columns: 15
   gridContainer: {fileID: 2006114320}
   maxDistance: 0
   gameManager: {fileID: 1098577508}
@@ -669,8 +669,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   occupiedCollider: {fileID: 0}
-  gridCellTypeModifierTool: 0
-  selectTileMode: 1
+  gridCellTypeModifierTool: 1
+  selectTileMode: 0
   tileGrid: {fileID: 1328098497}
 --- !u!54 &1521960898
 Rigidbody:

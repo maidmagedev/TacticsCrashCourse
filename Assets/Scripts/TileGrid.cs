@@ -6,10 +6,15 @@ using UnityEngine;
 public class TileGrid : MonoBehaviour
 {
 
-    [Header("Setup")]
-    public GameObject tilePrefab;
+    [Header("Settings")]
+    public GameObject tilePrefab; // the tile to be created
     public int rows;
     public int columns;
+    public Algorithm algorithm;
+    public double heuristicWeight = 11; // only used for A_Star. I've found that 11 works the best.
+    public float autoStepTimer = 0.1f; // delay between each iteration of the pathfinding algorithm
+    public bool manualStepping = false; // toggles manual gridcell by gridcell stepping during pathfinding.
+    public KeyCode manualStepKey = KeyCode.Space;
 
     [Header("Operational Variables....")]
     public GridCell[,] grid;
@@ -19,15 +24,20 @@ public class TileGrid : MonoBehaviour
     [Header("References")]
     public GameManager gameManager;
 
+    // Pathfinding algorithm to be used.
+    public enum Algorithm {
+        Dijkstras,
+        A_Star
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        InstantiateGrid();
-        SetupNeighbors();
+        StartCoroutine(InstantiateGrid());
     }
 
     // Creates our Grid using settings from our local variables. Hooks up all the references, and creates the physical game world tiles.
-    private void InstantiateGrid() {
+    private IEnumerator InstantiateGrid() {
         // Create a 2 Dimensional Array of GridCells.
         if (grid == null) {
             grid = new GridCell[columns, rows];
@@ -54,8 +64,11 @@ public class TileGrid : MonoBehaviour
 
                 // Make this object a child of the gridContainer object. This keeps our hierarchy clean.
                 currObj.transform.SetParent(gridContainer.transform);
+                yield return new WaitForSeconds(0.01f);
             }
         }
+        SetupNeighbors();
+
     }
 
     // Second pass of the grid that sets up neighbor connections.
@@ -91,8 +104,8 @@ public class TileGrid : MonoBehaviour
         }
     }
 
-    public void GetPath((int, int) endCoordinates) {
-
+    public IEnumerator GetPath(GridCell end) {
+        (int, int) endCoordinates = end.coordinates;
 
         ResetText();
         // Get the starting GridCell from our Grid, using the current selected unit's coordinates.
@@ -103,25 +116,32 @@ public class TileGrid : MonoBehaviour
 
         // Reset each grid cell's states to ensure the path is generated correctly.
         foreach (GridCell currCell in grid) {
-            currCell.dist = int.MaxValue; // set to infinity
+            currCell.finalCost = int.MaxValue; // set to infinity
+            currCell.gCost = 0;
+            currCell.hCost = 0;
             currCell.previous = null;
 
             //pseudoQueue.Add(currCell);
         }
 
         // some versions of pathfinding algorithms store these instead in a map/dict in this script but personally I like this more... dont know why.
-        start.dist = 0;
+        start.finalCost = 0;
         pseudoQueue.Add(start);
         int i = 0;
         while (pseudoQueue.Count > 0) {
             Debug.Log("loop: " + i);
-            pseudoQueue.Sort((a, b) => a.dist.CompareTo(b.dist)); // Sort the queue.
+            pseudoQueue.Sort((a, b) => a.finalCost.CompareTo(b.finalCost)); // Sort the queue.
             GridCell current = pseudoQueue[0];
             pseudoQueue.Remove(current);
             visited.Add(current);
 
+            if (current.cellType == GridCell.Type.notTraversable) {
+                continue;
+            }
+
             //current.textElem.text = i.ToString();
-            current.textElem.text = current.dist.ToString();
+            current.textElem.text = current.finalCost.ToString();
+            current.textElem.color = Color.cyan;
 
             if (current.coordinates == endCoordinates) {
                 Debug.Log("End!");
@@ -137,33 +157,78 @@ public class TileGrid : MonoBehaviour
                 start.textElem.color = Color.green;
                 
                 gameManager.currentSelectedUnit.coordinates = endCoordinates;
-                return;
+                pseudoQueue.Clear();
+                continue;
             }
 
             // update neighbor distances.
             foreach(GridCell neighbor in current.neighbors) {
+
+
                 Debug.Log(" + neighbor");
                 // Get the distance from this cell.
-                double distFromCurr = current.dist + (neighbor.cost * neighbor.costModifier);
 
-                if (pseudoQueue.Contains(neighbor)) { // potentially update a neighbor
-                    // If the new distance from this cell is less than the stored distance, update the stored dist.
-                    if (distFromCurr < neighbor.dist) {
-                        neighbor.dist = distFromCurr;
+                // Dijsktra's Algorithm
+                if (algorithm == Algorithm.Dijkstras) {
+                    double distFromCurr;
+                    distFromCurr = current.finalCost + (neighbor.baseCost * neighbor.costModifier);
+                    if (pseudoQueue.Contains(neighbor)) { // potentially update a neighbor
+                        // If the new distance from this cell is less than the stored distance, update the stored dist.
+                        if (distFromCurr < neighbor.finalCost) {
+                            neighbor.finalCost = distFromCurr;
+                            neighbor.previous = current;
+                        }
+                        // Normally we'd need to remove then add back the item if its updated, but since we sort on every pass I dont think we need to.
+                    } else if (!visited.Contains(neighbor)) { // add this unvisited node as a neighbor
+                        pseudoQueue.Add(neighbor);
+                        neighbor.finalCost = distFromCurr;
                         neighbor.previous = current;
+                        neighbor.textElem.color = Color.blue;
+                        neighbor.textElem.text = neighbor.finalCost.ToString();
                     }
-                } else if (!visited.Contains(neighbor)) { // add this unvisited node as a neighbor
-                    pseudoQueue.Add(neighbor);
-                    neighbor.dist = distFromCurr;
-                    neighbor.previous = current;
-                    
+                } else if (algorithm == Algorithm.A_Star) {
+                    // A* Algorithm using Manhattan Distance.
+                    double newGCost = neighbor.baseCost + current.gCost;
+                    double newHCost = ManhattanDist(neighbor, end) * heuristicWeight;
+
+                    if (pseudoQueue.Contains(neighbor)) {
+                        if (newGCost + newHCost < neighbor.finalCost) {
+                            neighbor.gCost = newGCost;
+                            neighbor.hCost = newHCost;
+                            neighbor.finalCost = neighbor.gCost + neighbor.hCost;    
+                            neighbor.previous = current;
+                        }
+                    } else if (!visited.Contains(neighbor)) {
+                        pseudoQueue.Add(neighbor);
+
+                        neighbor.gCost = newGCost;
+                        neighbor.hCost = newHCost;
+                        neighbor.finalCost = neighbor.gCost + neighbor.hCost;    
+                        neighbor.previous = current;
+
+                        neighbor.textElem.color = Color.blue;
+                        neighbor.textElem.text = neighbor.finalCost.ToString();
+                    }
                 }
             }
             i++;
+            if (manualStepping) {
+                bool wait = true;
+                while (wait) {
+                    if (Input.GetKeyDown(manualStepKey)) {
+                        wait = false;
+                    }
+                    yield return null;
+                }
+            } else {
+                yield return new WaitForSeconds(autoStepTimer);
+            }
         }
+    }
 
-
-
+    // hCost - hueristic - used by A* pathfinding.
+    public int ManhattanDist(GridCell A, GridCell B) {
+        return Mathf.Abs(A.coordinates.Item1 - B.coordinates.Item1) + Mathf.Abs(A.coordinates.Item2 - B.coordinates.Item2);
     }
 
 }

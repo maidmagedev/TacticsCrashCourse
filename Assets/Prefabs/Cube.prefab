@@ -311,8 +311,10 @@ MonoBehaviour:
   cellType: 0
   unit: {fileID: 0}
   costModifier: 1
-  cost: 1
-  dist: 0
+  baseCost: 10
+  gCost: 0
+  hCost: 0
+  finalCost: 0
   previous: {fileID: 0}
   neighbors: []
   textElem: {fileID: 532441553874372960}
