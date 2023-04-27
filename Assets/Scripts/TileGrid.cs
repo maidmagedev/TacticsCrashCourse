@@ -240,6 +240,12 @@ public class TileGrid : MonoBehaviour
                         neighbor.textElem.color = Color.yellow;
                         neighbor.textElem.text = neighbor.finalCost.ToString();
                     }
+
+
+
+
+
+
                 } else if (algorithm == Algorithm.A_Star) {
                     // A* Algorithm using Manhattan Distance.
                     double newGCost = neighbor.baseCost + current.gCost;
@@ -289,6 +295,11 @@ public class TileGrid : MonoBehaviour
     // Heuristic cost is the predicted distance to the end.
     public int ManhattanDist(GridCell A, GridCell B) {
         return Mathf.Abs(A.coordinates.Item1 - B.coordinates.Item1) + Mathf.Abs(A.coordinates.Item2 - B.coordinates.Item2);
+
+    }
+
+    public int EuclideanDist(GridCell A, GridCell B) {
+        return ((int) (Mathf.Pow(A.coordinates.Item1 - B.coordinates.Item1, 2) + Mathf.Pow(A.coordinates.Item2 - B.coordinates.Item2, 2)));
     }
 
     public IEnumerator PathLerp(List<GridCell> path, Unit unit) {

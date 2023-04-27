@@ -706,14 +706,14 @@ MonoBehaviour:
   fileSaveName: 
   saveFile: 0
   tilePrefab: {fileID: 2892044500977090049, guid: a8db4ea120cf85d40a6613e9ee2c7e3d, type: 3}
-  rows: 10
+  rows: 15
   columns: 15
   algorithm: 1
-  heuristicWeight: 11
-  autoStepTimer: 0.01
+  heuristicWeight: 10.1
+  autoStepTimer: 0.05
   manualStepping: 0
   manualStepKey: 32
-  travelTime: 0.25
+  travelTime: 0.5
   gridContainer: {fileID: 2006114320}
   currentlyRunning: 0
   gameManager: {fileID: 1098577508}
