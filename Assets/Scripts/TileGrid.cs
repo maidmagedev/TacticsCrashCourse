@@ -69,7 +69,7 @@ public class TileGrid : MonoBehaviour
                     currCell.neighbors.Add(grid[x, y + 1]);
                 }
                 // west
-                if (x - 1 > 0) {
+                if (x - 1 >= 0) {
                     currCell.neighbors.Add(grid[x - 1, y]);
                 }
                 // east
@@ -77,18 +77,29 @@ public class TileGrid : MonoBehaviour
                     currCell.neighbors.Add(grid[x + 1, y]);
                 }
                 // south
-                if (y - 1 > 0) {
+                if (y - 1 >= 0) {
                     currCell.neighbors.Add(grid[x, y - 1]);
                 }
             }
         }
     }
 
+    private void ResetText() {
+        foreach(GridCell curr in grid) {
+            curr.textElem.text = "?";
+            curr.textElem.color = Color.white;
+        }
+    }
+
     public void GetPath((int, int) endCoordinates) {
+
+
+        ResetText();
         // Get the starting GridCell from our Grid, using the current selected unit's coordinates.
         GridCell start = grid[gameManager.currentSelectedUnit.coordinates.Item1, gameManager.currentSelectedUnit.coordinates.Item2];
 
         List<GridCell> pseudoQueue = new List<GridCell>();
+        List<GridCell> visited = new List<GridCell>();
 
         // Reset each grid cell's states to ensure the path is generated correctly.
         foreach (GridCell currCell in grid) {
@@ -107,15 +118,25 @@ public class TileGrid : MonoBehaviour
             pseudoQueue.Sort((a, b) => a.dist.CompareTo(b.dist)); // Sort the queue.
             GridCell current = pseudoQueue[0];
             pseudoQueue.Remove(current);
-            current.textElem.text = i.ToString();// current.dist.ToString();
+            visited.Add(current);
+
+            //current.textElem.text = i.ToString();
+            current.textElem.text = current.dist.ToString();
 
             if (current.coordinates == endCoordinates) {
                 Debug.Log("End!");
+                current.textElem.text = "e";
+                current.textElem.color = Color.red;
+                current = current.previous;
                 // found the end!
-                while (current.previous != null) {
-                    current.textElem.text = "path";
+                while (current != null && current.previous != null || current == start) {
+                    current.textElem.text = ".";
                     current = current.previous;
                 }
+                start.textElem.text = "s";
+                start.textElem.color = Color.green;
+                
+                gameManager.currentSelectedUnit.coordinates = endCoordinates;
                 return;
             }
 
@@ -125,13 +146,13 @@ public class TileGrid : MonoBehaviour
                 // Get the distance from this cell.
                 double distFromCurr = current.dist + (neighbor.cost * neighbor.costModifier);
 
-                if (pseudoQueue.Contains(neighbor)) {
+                if (pseudoQueue.Contains(neighbor)) { // potentially update a neighbor
                     // If the new distance from this cell is less than the stored distance, update the stored dist.
                     if (distFromCurr < neighbor.dist) {
                         neighbor.dist = distFromCurr;
                         neighbor.previous = current;
                     }
-                } else {
+                } else if (!visited.Contains(neighbor)) { // add this unvisited node as a neighbor
                     pseudoQueue.Add(neighbor);
                     neighbor.dist = distFromCurr;
                     neighbor.previous = current;

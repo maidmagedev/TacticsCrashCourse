@@ -66,7 +66,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: '?'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -93,8 +93,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 70
-  m_fontSizeBase: 70
+  m_fontSize: 110
+  m_fontSizeBase: 110
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -195,6 +195,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hoverIndicator: {fileID: 5223084725745421241}
   myCell: {fileID: 8738848745476003721}
+  cursor: {fileID: 0}
 --- !u!1 &2892044500977090049
 GameObject:
   m_ObjectHideFlags: 0
@@ -260,7 +261,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dff83757541d554fa94c0006e9d73ae, type: 2}
+  - {fileID: 2100000, guid: 077822014b6c7454b8ebb0917cd982b0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -310,8 +311,9 @@ MonoBehaviour:
   cellType: 0
   unit: {fileID: 0}
   costModifier: 1
-  cost: 0
-  parent: {fileID: 0}
+  cost: 1
+  dist: 0
+  previous: {fileID: 0}
   neighbors: []
   textElem: {fileID: 532441553874372960}
   blockedIndicator: {fileID: 5438051383858579053}
