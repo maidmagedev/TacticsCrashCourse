@@ -1,10 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+using System.Linq;
 
 // This script spawns a 2D grid of game objects.
 public class TileGrid : MonoBehaviour
 {
+    // Unfinished
+    [Header("Level Data File")]
+    [SerializeField] string fileLoadName;
+    [SerializeField] bool loadFile;
+
+    [SerializeField] string fileSaveName;
+    [SerializeField] bool saveFile;
+
 
     [Header("Settings")]
     public GameObject tilePrefab; // the tile to be created
@@ -70,6 +80,9 @@ public class TileGrid : MonoBehaviour
                 yield return new WaitForSeconds(0.01f);
             }
         }
+        if (loadFile) {
+            LoadLevelDataFromFile();
+        }
         SetupNeighbors();
 
     }
@@ -107,6 +120,28 @@ public class TileGrid : MonoBehaviour
         }
     }
 
+    // Unfinished
+    private void LoadLevelDataFromFile() {
+        string path = Application.streamingAssetsPath + "/Levels/" + fileLoadName;
+        List<string> fileLines = File.ReadAllLines(path).ToList();
+    }
+
+    // Unfinished
+    private void SaveLevelDataToFile() {
+        string path = Application.streamingAssetsPath + "/Levels/" + fileSaveName;
+        List<string> fileLines = File.ReadAllLines(path).ToList();
+        File.WriteAllText(path, ""); // clear the file.
+        foreach (GridCell cell in grid) {
+            string json = JsonUtility.ToJson(cell);
+            File.AppendAllText(path, json);
+            File.AppendAllText(path, "\n");
+        }
+        print("recording saved.");
+    }
+
+    // This function creates a Path using either Dijsktra's or A* pathfinding algorithms and is highly customizable.
+    // Most parameters can be edited using this files local variables via the script or the inspect window.
+    // Heuristic values can be easily tweaked using a heuristic weight multiplier or changing the heuristic function entirely.
     public IEnumerator GetPath(GridCell end) {
 
         currentlyRunning = true;
@@ -163,7 +198,7 @@ public class TileGrid : MonoBehaviour
 
                 current = current.previous;
 
-                // found the end!
+                // Rebuild the path back to the start.
                 while (current != null && current.previous != null || current == start) {
                     path.Add(current);
                     current.textElem.text = ".";
